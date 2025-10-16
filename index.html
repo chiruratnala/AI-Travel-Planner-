@@ -87,9 +87,9 @@
                 <div class="flex items-center justify-between h-16">
                     <div class="flex items-center space-x-2">
                         <i data-lucide="compass" class="h-8 w-8 text-cyan-500"></i>
-                        <span class="text-lg sm:text-2xl font-bold text-slate-800">AI Travel Planner for Students</span>
+                        <span class="text-2xl font-bold text-slate-800">AI Travel Planner for Students</span>
                     </div>
-                    <div id="auth-container" class="flex items-center space-x-2 sm:space-x-4">
+                    <div id="auth-container" class="flex items-center space-x-4">
                         </div>
                 </div>
             </nav>
@@ -469,7 +469,7 @@
                 setTimeout(() => { modal.classList.add('hidden'); }, 300);
             }
             
-            function updateAuthUI() {
+        function updateAuthUI() {
                 const user = auth.getCurrentUser();
                 if (user) {
                     authContainer.innerHTML = `
@@ -477,10 +477,11 @@
                             <i data-lucide="briefcase"></i>
                             <span>My Trips</span>
                         </button>
-                        <button id="headerProfileBtn" class="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                        <button id="headerProfileBtn" class="flex-shrink-0 p-2 rounded-full hover:bg-slate-100 transition-colors">
                              <img src="${user.picture}" alt="Profile" class="h-8 w-8 rounded-full">
                         </button>
-<button id="logoutBtn" class="hidden sm:inline-flex text-sm font-medium text-slate-600 hover:text-cyan-600 transition-colors">Logout</button>                    `;
+                         <button id="logoutBtn" class="text-sm font-medium text-slate-600 hover:text-cyan-600 transition-colors">Logout</button>
+                    `;
                     document.getElementById('headerMyTripsBtn').addEventListener('click', loadAndShowTrips);
                     document.getElementById('headerProfileBtn').addEventListener('click', openProfileModal);
                     document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
