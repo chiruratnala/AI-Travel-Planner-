@@ -469,18 +469,21 @@
                 setTimeout(() => { modal.classList.add('hidden'); }, 300);
             }
             
-        function updateAuthUI() {
+      function updateAuthUI() {
                 const user = auth.getCurrentUser();
                 if (user) {
                     authContainer.innerHTML = `
-                        <button id="headerMyTripsBtn" class="hidden sm:inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-cyan-600 transition-colors">
+                        <button id="headerMyTripsBtn" class="hidden sm:inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-cyan-600 transition-colors rounded-lg">
                             <i data-lucide="briefcase"></i>
-                            <span>My Trips</span>
+                            <span class="hidden md:inline">My Trips</span>
                         </button>
                         <button id="headerProfileBtn" class="flex-shrink-0 p-2 rounded-full hover:bg-slate-100 transition-colors">
                              <img src="${user.picture}" alt="Profile" class="h-8 w-8 rounded-full">
                         </button>
-                         <button id="logoutBtn" class="text-sm font-medium text-slate-600 hover:text-cyan-600 transition-colors">Logout</button>
+                         <button id="logoutBtn" class="inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-cyan-600 transition-colors rounded-lg">
+                            <i data-lucide="log-out"></i>
+                            <span class="hidden md:inline">Logout</span>
+                        </button>
                     `;
                     document.getElementById('headerMyTripsBtn').addEventListener('click', loadAndShowTrips);
                     document.getElementById('headerProfileBtn').addEventListener('click', openProfileModal);
@@ -494,7 +497,6 @@
                 }
                 lucide.createIcons();
             }
-
             // --- API & DATA LOGIC ---
             function startGeneration() {
                  errorMessage.classList.remove('show');
