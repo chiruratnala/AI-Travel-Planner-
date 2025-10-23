@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Planner</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2306b6d4%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><polygon points=%2216.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76%22 fill=%22%2306b6d4%22/></svg>">        
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2306b6d4%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><polygon points=%2216.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76%22 fill=%22%2306b6d4%22/></svg>">        
     <meta name="google-signin-client_id" content="945126500147-nj621u8rpo487apfp39m4hq7olau2j8g.apps.googleusercontent.com">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -247,15 +247,15 @@
                         <div id="budget-note" class="bg-cyan-50 border border-cyan-200 text-cyan-800 p-4 rounded-lg mb-8 flex items-start gap-3">
                             <i data-lucide="info" class="h-5 w-5 flex-shrink-0 mt-0.5"></i>
                             <div>
-                                <h4 class="font-bold">Plan Your Spending</h4>
-                                <p class="text-sm">This is an AI-generated budget estimate. Drag and drop events to customize your daily plan!</p>
+                                <h4 class="font-bold">Plan Your Spendings</h4>
+                                <p class="text-sm">This is an AI-generated budget estimate. Spend your money based on your budget!</p>
                             </div>
                         </div>
 
                         <div>
                             <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <i data-lucide="calendar-days"></i>
-                                Your Customizable Plan
+                                Your Plan
                             </h3>
                             <div id="itinerary-content-container" class="space-y-8">
                                 </div>
@@ -371,6 +371,39 @@
                 </div>
             </div>
         </div>
+
+        <!-- New Travel Cost Modal -->
+        <div id="travelCostModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 modal-backdrop opacity-0">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col modal-content scale-95 opacity-0">
+                <div class="flex justify-between items-center p-4 border-b border-slate-200">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i data-lucide="plane" class="text-cyan-500"></i>
+                        Estimate Travel Cost
+                    </h2>
+                    <button class="close-modal-btn p-2 rounded-full hover:bg-slate-100">
+                        <i data-lucide="x" class="h-5 w-5 text-slate-500"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <p class="text-slate-600 mb-4">Enter your starting location to estimate travel costs to your destination.</p>
+                    <form id="travelCostForm" class="space-y-4">
+                        <div>
+                            <label for="travelFrom" class="block text-sm font-medium text-slate-700">Starting Location (City, Country)</label>
+                            <div class="mt-1 relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i data-lucide="map-pin" class="h-5 w-5 text-slate-400"></i>
+                                </div>
+                                <input type="text" id="travelFrom" class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500" placeholder="e.g., Delhi, India">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button type="button" id="cancelTravelCostBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-6 rounded-lg">Cancel</button>
+                            <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2.5 px-6 rounded-lg">Calculate</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 translate-y-2">
@@ -412,6 +445,9 @@
             const myTripsModal = document.getElementById('myTripsModal');
             const myTripsList = document.getElementById('myTripsList');
             const profileModal = document.getElementById('profileModal');
+            const travelCostModal = document.getElementById('travelCostModal');
+            const travelCostForm = document.getElementById('travelCostForm');
+            const cancelTravelCostBtn = document.getElementById('cancelTravelCostBtn');
 
             // Profile Modal Elements
             const profileView = document.getElementById('profile-view');
@@ -470,7 +506,7 @@
                 setTimeout(() => { modal.classList.add('hidden'); }, 300);
             }
             
-      function updateAuthUI() {
+            function updateAuthUI() {
                 const user = auth.getCurrentUser();
                 if (user) {
                     authContainer.innerHTML = `
@@ -498,6 +534,7 @@
                 }
                 lucide.createIcons();
             }
+            
             // --- API & DATA LOGIC ---
             function startGeneration() {
                  errorMessage.classList.remove('show');
@@ -534,7 +571,7 @@
                 if (!destination || !startDate || !endDate || !travelers || !budget) { throw new Error("Please fill out all the trip details before generating."); }
                 if (new Date(endDate) < new Date(startDate)) { throw new Error("End date cannot be before the start date."); }
                 
-                const tripLength = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                               const tripLength = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
                 const schema = { type: "OBJECT", properties: { "days": { type: "ARRAY", items: { type: "OBJECT", properties: { "day": { type: "NUMBER" }, "title": { type: "STRING" }, "events": { type: "ARRAY", items: { type: "OBJECT", properties: { "time": { type: "STRING" }, "title": { type: "STRING" }, "locationName": { type: "STRING" }, "description": { type: "STRING" }, "cost": { type: "NUMBER" }, "icon": { type: "STRING" }, "latitude": { type: "NUMBER" }, "longitude": { type: "NUMBER" } }, required: ["time", "title", "locationName", "description", "cost", "icon", "latitude", "longitude"] } } }, required: ["day", "title", "events"] } }, "hotelRecommendations": { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "style": { "type": "STRING" }, "estimatedPricePerNight": { "type": "NUMBER" }, "description": { "type": "STRING" }, "latitude": { "type": "NUMBER" }, "longitude": { "type": "NUMBER" } }, required: ["name", "style", "estimatedPricePerNight", "description", "latitude", "longitude"] } }, "restaurantRecommendations": { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "cuisine": { "type": "STRING" }, "estimatedPricePerPerson": { "type": "NUMBER" }, "description": { "type": "STRING" }, "latitude": { "type": "NUMBER" }, "longitude": { "type": "NUMBER" } }, required: ["name", "cuisine", "estimatedPricePerPerson", "description", "latitude", "longitude"] } }, "budgetBreakdown": { type: "OBJECT", properties: { "accommodation": { "type": "NUMBER" }, "food": { "type": "NUMBER" }, "activities": { "type": "NUMBER" }, "localTravel": { "type": "NUMBER" }, "miscellaneous": { "type": "NUMBER" } }, required: ["accommodation", "food", "activities", "localTravel", "miscellaneous"] } }, required: ["days", "hotelRecommendations", "restaurantRecommendations", "budgetBreakdown"] };
                 const validIcons = ["map-pin", "camera", "soup", "leaf", "shopping-cart", "trees", "beer", "gamepad-2", "heart", "gem", "bar-chart-2", "plane", "bus", "train", "utensils-crossed", "landmark", "mountain", "palace", "ticket", "log-in", "bed-double"];
                 const systemPrompt = `You are an expert Travel Planner. Your task is to create a budget-friendly and logically sequenced itinerary based on user inputs, adhering strictly to the JSON schema.
@@ -605,7 +642,6 @@ Key Constraints:
                 document.getElementById('total-budget').textContent = `₹${parseFloat(details.budget).toFixed(0)}`;
                 travelCostResult.innerHTML = ''; // Reset travel cost on new render
 
-
                 recalculateAndUpdateBudget();
                 
                 if (itineraryData.budgetBreakdown) {
@@ -619,8 +655,46 @@ Key Constraints:
                 const hotelCardsContainer = document.getElementById('hotel-cards');
                 const restaurantCardsContainer = document.getElementById('restaurant-cards');
                 hotelCardsContainer.innerHTML = ''; restaurantCardsContainer.innerHTML = '';
-                (itineraryData.hotelRecommendations || []).forEach(hotel => { const card = document.createElement('div'); card.className = "bg-white p-3 rounded-lg border border-slate-200"; card.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold text-slate-800 text-sm">${hotel.name}</p><p class="text-xs text-slate-500">${hotel.style}</p></div><p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">₹${hotel.estimatedPricePerNight}/night</p></div><p class="mt-2 text-slate-600 text-xs">${hotel.description}</p><div class="mt-2"><button data-lat="${hotel.latitude}" data-lon="${hotel.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i></button></div>`; hotelCardsContainer.appendChild(card); });
-                (itineraryData.restaurantRecommendations || []).forEach(resto => { const card = document.createElement('div'); card.className = "bg-white p-3 rounded-lg border border-slate-200"; card.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold text-slate-800 text-sm">${resto.name}</p><p class="text-xs text-slate-500">${resto.cuisine}</p></div><p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">~₹${resto.estimatedPricePerPerson}/person</p></div><p class="mt-2 text-slate-600 text-xs">${resto.description}</p><div class="mt-2"><button data-lat="${resto.latitude}" data-lon="${resto.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i></button></div>`; restaurantCardsContainer.appendChild(card); });
+                (itineraryData.hotelRecommendations || []).forEach(hotel => { 
+                    const card = document.createElement('div'); 
+                    card.className = "bg-white p-3 rounded-lg border border-slate-200"; 
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${hotel.name}</p>
+                                <p class="text-xs text-slate-500">${hotel.style}</p>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">₹${hotel.estimatedPricePerNight}/night</p>
+                        </div>
+                        <p class="mt-2 text-slate-600 text-xs">${hotel.description}</p>
+                        <div class="mt-2">
+                            <button data-lat="${hotel.latitude}" data-lon="${hotel.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
+                                Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
+                            </button>
+                        </div>
+                    `; 
+                    hotelCardsContainer.appendChild(card); 
+                });
+                (itineraryData.restaurantRecommendations || []).forEach(resto => { 
+                    const card = document.createElement('div'); 
+                    card.className = "bg-white p-3 rounded-lg border border-slate-200"; 
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${resto.name}</p>
+                                <p class="text-xs text-slate-500">${resto.cuisine}</p>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">~₹${resto.estimatedPricePerPerson}/person</p>
+                        </div>
+                        <p class="mt-2 text-slate-600 text-xs">${resto.description}</p>
+                        <div class="mt-2">
+                            <button data-lat="${resto.latitude}" data-lon="${resto.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
+                                Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
+                            </button>
+                        </div>
+                    `; 
+                    restaurantCardsContainer.appendChild(card); 
+                });
                 
                 itineraryContentContainer.innerHTML = '';
                 itineraryData.days.forEach((day, dayIndex) => { 
@@ -628,19 +702,24 @@ Key Constraints:
                     dayContainer.className = "bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-200"; 
                     let contentHTML = `<div class="flex justify-between items-center mb-4"><h4 class="text-xl font-bold text-slate-800">Day ${day.day}: ${day.title}</h4></div><div class="space-y-4 day-events-container" data-day-index="${dayIndex}">`; 
                     (day.events || []).forEach((event, eventIndex) => { 
-                        contentHTML += `<div class="event-card flex items-start space-x-4 draggable" draggable="true" data-day-index="${dayIndex}" data-event-index="${eventIndex}">
+                        contentHTML += `
+                        <div class="event-card flex items-start space-x-4 draggable" draggable="true" data-day-index="${dayIndex}" data-event-index="${eventIndex}">
                             <div class="flex-shrink-0 mt-1 flex flex-col items-center">
                                 <i data-lucide="grip-vertical" class="h-5 w-5 text-slate-400"></i>
                             </div>
                             <div class="flex-shrink-0 flex flex-col items-center">
-                                <div class="flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-cyan-600"><i data-lucide="${event.icon}" class="h-5 w-5"></i></div>
+                                <div class="flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-cyan-600">
+                                    <i data-lucide="${event.icon}" class="h-5 w-5"></i>
+                                </div>
                             </div>
                             <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-200 w-full">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <p class="font-semibold text-slate-500 text-sm">${event.time}</p>
                                         <p class="font-bold text-slate-800">${event.title}</p>
-                                        <p class="text-xs text-slate-500 flex items-center gap-1 mt-1"><i data-lucide="map-pin" class="h-3 w-3"></i> ${event.locationName}</p>
+                                        <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                            <i data-lucide="map-pin" class="h-3 w-3"></i> ${event.locationName}
+                                        </p>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <p class="text-sm font-semibold text-slate-700 bg-slate-200 px-2 py-1 rounded-md">₹${event.cost || 0}</p>
@@ -648,10 +727,10 @@ Key Constraints:
                                 </div>
                                 <p class="mt-2 text-slate-600 text-sm">${event.description}</p>
                                 <div class="mt-2">
-    <button data-lat="${event.latitude}" data-lon="${event.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
-        Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
-    </button>
-</div>
+                                    <button data-lat="${event.latitude}" data-lon="${event.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
+                                        Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>`; 
                     }); 
@@ -796,7 +875,18 @@ Key Constraints:
                         const destination = trip.details.destination;
                         const startDate = new Date(trip.details.startDate);
                         const formatDate = (date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
-                        item.innerHTML = `<div><p class="font-bold text-slate-800">${destination}</p><p class="text-sm text-slate-500">${formatDate(startDate)}</p></div><div class="flex items-center gap-2"><button data-trip-id="${trip.id}" class="load-trip-btn bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-1.5 px-3 rounded-md text-sm">Load</button><button data-trip-id="${trip.id}" class="delete-trip-btn p-2 rounded-md hover:bg-red-100 text-red-500"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div>`;
+                        item.innerHTML = `
+                            <div>
+                                <p class="font-bold text-slate-800">${destination}</p>
+                                <p class="text-sm text-slate-500">${formatDate(startDate)}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button data-trip-id="${trip.id}" class="load-trip-btn bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-1.5 px-3 rounded-md text-sm">Load</button>
+                                <button data-trip-id="${trip.id}" class="delete-trip-btn p-2 rounded-md hover:bg-red-100 text-red-500">
+                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                </button>
+                            </div>
+                        `;
                         list.appendChild(item);
                     });
                     myTripsList.appendChild(list);
@@ -864,6 +954,89 @@ Key Constraints:
                 showToast(`Welcome, ${user.name}!`);
             };
 
+            // --- IMPROVED TRAVEL COST ESTIMATION ---
+            function openTravelCostModal() {
+                showModal(travelCostModal);
+                document.getElementById('travelFrom').focus();
+            }
+
+            function handleTravelCostEstimation(e) {
+                e.preventDefault();
+                const travelFrom = document.getElementById('travelFrom').value.trim();
+                
+                if (!travelFrom) {
+                    showToast("Please enter your starting location.");
+                    return;
+                }
+
+                if (!currentItineraryData || !currentItineraryData.days[0].events[0]) {
+                    showToast("Destination location not available.");
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = travelCostForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mx-auto"></div>';
+                submitBtn.disabled = true;
+
+                // In a real implementation, you would call an API to get coordinates for the starting location
+                // For this demo, we'll simulate the process
+                setTimeout(() => {
+                    const destLat = currentItineraryData.days[0].events[0].latitude;
+                    const destLon = currentItineraryData.days[0].events[0].longitude;
+                    
+                    // Simulate getting coordinates for starting location
+                    // In reality, you would use a geocoding service here
+                    const startLat = destLat + (Math.random() * 10 - 5); // Random location near destination for demo
+                    const startLon = destLon + (Math.random() * 10 - 5);
+                    
+                    const distance = getHaversineDistance(startLat, startLon, destLat, destLon);
+                    
+                    // More realistic cost estimation based on distance and travel mode
+                    const flightCost = Math.max(2000, distance * 8); // Base flight cost
+                    const trainCost = Math.max(500, distance * 2); // Base train cost
+                    const busCost = Math.max(300, distance * 1.5); // Base bus cost
+                    
+                    travelCostResult.innerHTML = `
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-2">Travel Cost from ${travelFrom}</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Flight (round trip):</span>
+                                    <span class="font-semibold">₹${flightCost.toFixed(0)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Train (round trip):</span>
+                                    <span class="font-semibold">₹${trainCost.toFixed(0)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Bus (round trip):</span>
+                                    <span class="font-semibold">₹${busCost.toFixed(0)}</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-3">Based on approximate distance of ${distance.toFixed(0)} km. Prices are estimates for planning purposes.</p>
+                        </div>
+                    `;
+                    
+                    // Reset button
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    
+                    closeModal(travelCostModal);
+                }, 1500);
+            }
+
+            function getHaversineDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371; // Radius of the Earth in km
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            }
 
             // --- EVENT LISTENERS ---
             startPlanningBtn.addEventListener('click', () => {
@@ -877,7 +1050,11 @@ Key Constraints:
             generateBtn.addEventListener('click', startGeneration);
             startOverBtn.addEventListener('click', () => { if (map) { map.remove(); map = null; }; showSection(heroSection); });
             saveTripBtn.addEventListener('click', saveCurrentTrip);
-            estimateTravelCostBtn.addEventListener('click', handleEstimateTravelCost);
+            
+            // Updated travel cost estimation
+            estimateTravelCostBtn.addEventListener('click', openTravelCostModal);
+            travelCostForm.addEventListener('submit', handleTravelCostEstimation);
+            cancelTravelCostBtn.addEventListener('click', () => closeModal(travelCostModal));
             
             // --- DRAG AND DROP LOGIC ---
             function regenerateTimesForDay(events) {
@@ -967,53 +1144,6 @@ Key Constraints:
                 }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
 
-            // --- Travel Cost Estimation ---
-            function handleEstimateTravelCost() {
-                if (!navigator.geolocation) {
-                    travelCostResult.textContent = "Geolocation is not supported by your browser.";
-                    return;
-                }
-                
-                travelCostResult.textContent = "Getting your location...";
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const userLat = position.coords.latitude;
-                        const userLon = position.coords.longitude;
-                        
-                        if (!currentItineraryData || !currentItineraryData.days[0].events[0]) {
-                            travelCostResult.textContent = "Destination location not available.";
-                            return;
-                        }
-
-                        const destLat = currentItineraryData.days[0].events[0].latitude;
-                        const destLon = currentItineraryData.days[0].events[0].longitude;
-
-                        const distance = getHaversineDistance(userLat, userLon, destLat, destLon);
-                        
-                        // Simulation: e.g., ₹5 per kilometer for a round trip flight/train
-                        const estimatedCost = distance * 5 * 2; 
-
-                        travelCostResult.innerHTML = `Estimated round-trip travel from your location: <span class="font-bold">₹${estimatedCost.toFixed(0)}</span> (based on a distance of ${distance.toFixed(0)} km).<br><span class="text-xs">This is a rough estimate for planning purposes only.</span>`;
-                    },
-                    () => {
-                        travelCostResult.textContent = "Unable to retrieve your location. Please grant permission and try again.";
-                    }
-                );
-            }
-
-            function getHaversineDistance(lat1, lon1, lat2, lon2) {
-                const R = 6371; // Radius of the Earth in km
-                const dLat = (lat2 - lat1) * Math.PI / 180;
-                const dLon = (lon2 - lon1) * Math.PI / 180;
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                return R * c;
-            }
-
-
             // Modals
             modalsContainer.addEventListener('click', (e) => {
                 if(e.target.closest('.close-modal-btn')) {
@@ -1072,7 +1202,7 @@ Key Constraints:
                 startDateInput.addEventListener('change', (e) => {
                     if (e.target.value) {
                         const nextDay = new Date(e.target.value);
-                        nextDay.setDate(nextDay.getDate() + 1);
+                                                nextDay.setDate(nextDay.getDate() + 1);
                         const nextDayStr = nextDay.toISOString().split('T')[0];
                         endDateInput.value = ''; // Clear end date if start date changes
                         endDateInput.setAttribute('min', nextDayStr);
