@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Travel Planner for Students</title>
+    <title>Travel Planner</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2306b6d4%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><polygon points=%2216.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76%22 fill=%22%2306b6d4%22/></svg>">        
     <meta name="google-signin-client_id" content="945126500147-nj621u8rpo487apfp39m4hq7olau2j8g.apps.googleusercontent.com">
 
@@ -88,7 +88,7 @@
                     <div class="flex items-center space-x-2 min-w-0">
                         <i data-lucide="compass" class="h-8 w-8 text-cyan-500 flex-shrink-0"></i>
                         <span class="text-xl sm:text-2xl font-bold text-slate-800 truncate">
-                            AI Travel Planner <span class="hidden sm:inline">for Students</span>
+                            <span class="hidden sm:inline">Travel Planner </span>
                         </span>
                     </div>
                     <div id="auth-container" class="flex items-center space-x-2 sm:space-x-4">
@@ -310,7 +310,7 @@
 
         <footer class="bg-slate-100 border-t border-slate-200">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-500">
-                <p>&copy; 2025 AI Travel Planner for Students. All rights reserved.</p>
+                <p>&copy; 2025 Travel Planner. All rights reserved.</p>
                 <p class="mt-1">Making student travel easier, one trip at a time.</p>
             </div>
         </footer>
@@ -537,7 +537,7 @@
                 const tripLength = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
                 const schema = { type: "OBJECT", properties: { "days": { type: "ARRAY", items: { type: "OBJECT", properties: { "day": { type: "NUMBER" }, "title": { type: "STRING" }, "events": { type: "ARRAY", items: { type: "OBJECT", properties: { "time": { type: "STRING" }, "title": { type: "STRING" }, "locationName": { type: "STRING" }, "description": { type: "STRING" }, "cost": { type: "NUMBER" }, "icon": { type: "STRING" }, "latitude": { type: "NUMBER" }, "longitude": { type: "NUMBER" } }, required: ["time", "title", "locationName", "description", "cost", "icon", "latitude", "longitude"] } } }, required: ["day", "title", "events"] } }, "hotelRecommendations": { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "style": { "type": "STRING" }, "estimatedPricePerNight": { "type": "NUMBER" }, "description": { "type": "STRING" }, "latitude": { "type": "NUMBER" }, "longitude": { "type": "NUMBER" } }, required: ["name", "style", "estimatedPricePerNight", "description", "latitude", "longitude"] } }, "restaurantRecommendations": { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "cuisine": { "type": "STRING" }, "estimatedPricePerPerson": { "type": "NUMBER" }, "description": { "type": "STRING" }, "latitude": { "type": "NUMBER" }, "longitude": { "type": "NUMBER" } }, required: ["name", "cuisine", "estimatedPricePerPerson", "description", "latitude", "longitude"] } }, "budgetBreakdown": { type: "OBJECT", properties: { "accommodation": { "type": "NUMBER" }, "food": { "type": "NUMBER" }, "activities": { "type": "NUMBER" }, "localTravel": { "type": "NUMBER" }, "miscellaneous": { "type": "NUMBER" } }, required: ["accommodation", "food", "activities", "localTravel", "miscellaneous"] } }, required: ["days", "hotelRecommendations", "restaurantRecommendations", "budgetBreakdown"] };
                 const validIcons = ["map-pin", "camera", "soup", "leaf", "shopping-cart", "trees", "beer", "gamepad-2", "heart", "gem", "bar-chart-2", "plane", "bus", "train", "utensils-crossed", "landmark", "mountain", "palace", "ticket", "log-in", "bed-double"];
-                const systemPrompt = `You are an expert AI Travel Planner for students. Your task is to create a budget-friendly and logically sequenced itinerary based on user inputs, adhering strictly to the JSON schema.
+                const systemPrompt = `You are an expert Travel Planner. Your task is to create a budget-friendly and logically sequenced itinerary based on user inputs, adhering strictly to the JSON schema.
 Key Constraints:
 1.  **Strict Budget Adherence:** The sum of 'accommodation', 'food', 'activities', and 'localTravel' in the 'budgetBreakdown' MUST be less than or equal to the user's total budget. 'miscellaneous' is the remaining buffer. The sum of all five breakdown categories MUST precisely equal the total budget.
 2.  **Geographical Optimization:** For each day, the 'events' MUST be ordered in a geographically logical sequence to create a sensible route that minimizes travel time and cost.
