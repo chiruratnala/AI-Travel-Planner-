@@ -13,6 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -45,7 +47,6 @@
         .modal-content {
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
-        /* Toast Notification */
         #toast {
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
@@ -54,27 +55,25 @@
             transform: translateY(0);
         }
         .leaflet-control-attribution a {
-            color: #0891b2 !important; /* cyan-600 */
+            color: #0891b2 !important;
         }
-        /* Custom map marker style */
         .custom-map-icon svg {
-             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
         }
-        /* Styles for drag and drop */
         .draggable {
             cursor: grab;
-            user-select: none;
         }
         .draggable:active {
             cursor: grabbing;
         }
-        .dragging {
-            opacity: 0.5;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            background-color: #f0f9ff; /* sky-50 */
+        .sortable-ghost {
+             opacity: 0.4;
+             background-color: #f0f9ff;
+             border: 2px dashed #06b6d4;
         }
-        .drag-over {
-            border-top: 2px dashed #06b6d4; /* cyan-500 */
+        .sortable-drag {
+            opacity: 0.9;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
     </style>
 </head>
@@ -91,11 +90,19 @@
                             <span class="hidden sm:inline">Travel Planner </span>
                         </span>
                     </div>
-                    <div id="auth-container" class="flex items-center space-x-2 sm:space-x-4">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <div id="g_id_onload" 
+                             data-client_id="945126500147-nj621u8rpo487apfp39m4hq7olau2j8g.apps.googleusercontent.com"
+                             data-callback="handleGoogleSignIn"
+                             data-auto_prompt="false">
                         </div>
+                        <div id="auth-container-buttons" class="flex items-center space-x-2 sm:space-x-4">
+                            </div>
+                    </div>
                 </div>
             </nav>
         </header>
+
         <main class="flex-grow">
             <section id="heroSection" class="container mx-auto px-4 py-16 sm:py-24 text-center">
                 <div class="max-w-3xl mx-auto">
@@ -120,7 +127,6 @@
                             <p class="font-bold">Oops! Something went wrong.</p>
                             <p id="errorText" class="text-sm">Could not generate the itinerary. Please try again.</p>
                         </div>
-
                         <div>
                             <h2 class="text-2xl font-bold text-center text-slate-800">Tell us about your trip!</h2>
                             <p class="text-center text-slate-500 mt-1">Our AI will find the best spots for you.</p>
@@ -145,7 +151,7 @@
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                     <div>
+                                    <div>
                                         <label for="travelers" class="block text-sm font-medium text-slate-700">Travelers</label>
                                         <div class="mt-1 relative">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -158,9 +164,9 @@
                                         <label for="budget" class="block text-sm font-medium text-slate-700">Total Budget (INR)</label>
                                         <div class="mt-1 relative">
                                              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <i data-lucide="indian-rupee" class="h-5 w-5 text-slate-400"></i>
-                                            </div>
-                                            <input type="number" id="budget" class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500" placeholder="e.g., 50000">
+                                                 <i data-lucide="indian-rupee" class="h-5 w-5 text-slate-400"></i>
+                                             </div>
+                                             <input type="number" id="budget" class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md shadow-sm focus:ring-cyan-500 focus:border-cyan-500" placeholder="e.g., 50000">
                                         </div>
                                     </div>
                                 </div>
@@ -192,7 +198,6 @@
                     <p id="trip-location" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900"></p>
                     <p id="trip-dates" class="mt-2 text-slate-600"></p>
                 </div>
-
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     <div class="lg:col-span-3">
                         <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 mb-6">
@@ -207,7 +212,6 @@
                             </div>
                             <p class="text-xs text-slate-500 text-right mt-1">Total Estimated Spending</p>
                         </div>
-                        
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 text-center">
                             <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                                 <i data-lucide="bed-double" class="h-6 w-6 mx-auto text-cyan-600 mb-1"></i>
@@ -235,7 +239,6 @@
                                 <p id="budget-misc" class="font-bold text-slate-800"></p>
                             </div>
                         </div>
-
                         <div class="bg-white p-4 rounded-xl shadow-md border border-slate-200 mb-6 text-center">
                             <button id="estimateTravelCostBtn" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2 mx-auto">
                                 <i data-lucide="plane"></i>
@@ -243,7 +246,6 @@
                             </button>
                             <div id="travelCostResult" class="mt-3 text-slate-600 text-sm"></div>
                         </div>
-
                         <div id="budget-note" class="bg-cyan-50 border border-cyan-200 text-cyan-800 p-4 rounded-lg mb-8 flex items-start gap-3">
                             <i data-lucide="info" class="h-5 w-5 flex-shrink-0 mt-0.5"></i>
                             <div>
@@ -251,50 +253,42 @@
                                 <p class="text-sm">This is an AI-generated budget estimate. Spend your money based on your budget!</p>
                             </div>
                         </div>
-
                         <div>
                             <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                                 <i data-lucide="calendar-days"></i>
                                 Your Plan
                             </h3>
-                            <div id="itinerary-content-container" class="space-y-8">
-                                </div>
+                            <div id="itinerary-content-container" class="space-y-8"></div>
                         </div>
-                        
                         <div class="mt-10">
                              <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <i data-lucide="sparkles"></i>
-                                Recommendations
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
-                                    <h4 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                                        <i data-lucide="bed-double"></i>
-                                        Accommodation
-                                    </h4>
-                                    <div id="hotel-cards" class="space-y-3">
-                                        </div>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                                        <i data-lucide="utensils-crossed"></i>
-                                        Foodie Finds
-                                    </h4>
-                                    <div id="restaurant-cards" class="space-y-3">
-                                        </div>
-                                </div>
-                            </div>
+                                 <i data-lucide="sparkles"></i>
+                                 Recommendations
+                             </h3>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                 <div>
+                                     <h4 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                                         <i data-lucide="bed-double"></i>
+                                         Accommodation
+                                     </h4>
+                                     <div id="hotel-cards" class="space-y-3"></div>
+                                 </div>
+                                 <div>
+                                     <h4 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                                         <i data-lucide="utensils-crossed"></i>
+                                         Foodie Finds
+                                     </h4>
+                                     <div id="restaurant-cards" class="space-y-3"></div>
+                                 </div>
+                             </div>
                         </div>
                     </div>
-
                      <div class="lg:col-span-2">
                         <div class="sticky top-24 h-[80vh] rounded-xl shadow-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
                             <div id="map" class="h-full w-full rounded-xl"></div>
                         </div>
                     </div>
-
                 </div>
-
                 <div class="mt-12 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
                     <button id="startOverBtn" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-lg transition-all">
                         <i data-lucide="rotate-ccw"></i>
@@ -314,7 +308,6 @@
                 <p class="mt-1">Making student travel easier, one trip at a time.</p>
             </div>
         </footer>
-
     </div>
 
     <div id="modals-container">
@@ -327,13 +320,11 @@
                 <div id="myTripsList" class="p-6 overflow-y-auto"></div>
             </div>
         </div>
-
         <div id="profileModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 modal-backdrop opacity-0">
             <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col modal-content scale-95 opacity-0">
                 <div class="flex justify-between items-center p-4 border-b border-slate-200">
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="user-circle" class="text-cyan-500"></i>
-                        Your Profile
+                        <i data-lucide="user-circle" class="text-cyan-500"></i> Your Profile
                     </h2>
                     <button class="close-modal-btn p-2 rounded-full hover:bg-slate-100">
                         <i data-lucide="x" class="h-5 w-5 text-slate-500"></i>
@@ -343,17 +334,17 @@
                     <div id="profile-view">
                         <div class="space-y-4">
                              <div class="flex justify-center">
-                                <img id="profileImageView" class="h-24 w-24 rounded-full" src="" alt="Profile Picture">
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Name</p>
-                                <p id="profileNameView" class="text-lg text-slate-800"></p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-slate-500">Email</p>
-                                <p id="profileEmailView" class="text-lg text-slate-800"></p>
-                            </div>
-                            <button id="editProfileBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-6 rounded-lg">Edit Profile</button>
+                                 <img id="profileImageView" class="h-24 w-24 rounded-full" src="" alt="Profile Picture">
+                             </div>
+                             <div>
+                                 <p class="text-sm font-medium text-slate-500">Name</p>
+                                 <p id="profileNameView" class="text-lg text-slate-800"></p>
+                             </div>
+                             <div>
+                                 <p class="text-sm font-medium text-slate-500">Email</p>
+                                 <p id="profileEmailView" class="text-lg text-slate-800"></p>
+                             </div>
+                             <button id="editProfileBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-6 rounded-lg">Edit Profile</button>
                         </div>
                     </div>
                     <div id="profile-edit" class="hidden">
@@ -371,14 +362,11 @@
                 </div>
             </div>
         </div>
-
-        <!-- New Travel Cost Modal -->
         <div id="travelCostModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 modal-backdrop opacity-0">
             <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col modal-content scale-95 opacity-0">
                 <div class="flex justify-between items-center p-4 border-b border-slate-200">
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i data-lucide="plane" class="text-cyan-500"></i>
-                        Estimate Travel Cost
+                        <i data-lucide="plane" class="text-cyan-500"></i> Estimate Travel Cost
                     </h2>
                     <button class="close-modal-btn p-2 rounded-full hover:bg-slate-100">
                         <i data-lucide="x" class="h-5 w-5 text-slate-500"></i>
@@ -416,7 +404,6 @@
         let map = null;
         let markers = {};
         let blueIcon, redIcon;
-        let draggedItem = null;
 
         function initializeAppLogic() {
             // --- ELEMENTS ---
@@ -436,11 +423,10 @@
             const generateBtn = document.getElementById('generateBtn');
             const loaderText = document.getElementById('loaderText');
             const saveTripBtn = document.getElementById('saveTripBtn');
-            const authContainer = document.getElementById('auth-container');
+            const authContainerButtons = document.getElementById('auth-container-buttons');
             const estimateTravelCostBtn = document.getElementById('estimateTravelCostBtn');
             const travelCostResult = document.getElementById('travelCostResult');
             
-            // Modal Elements
             const modalsContainer = document.getElementById('modals-container');
             const myTripsModal = document.getElementById('myTripsModal');
             const myTripsList = document.getElementById('myTripsList');
@@ -449,7 +435,6 @@
             const travelCostForm = document.getElementById('travelCostForm');
             const cancelTravelCostBtn = document.getElementById('cancelTravelCostBtn');
 
-            // Profile Modal Elements
             const profileView = document.getElementById('profile-view');
             const profileEdit = document.getElementById('profile-edit');
             const editProfileBtn = document.getElementById('editProfileBtn');
@@ -464,8 +449,8 @@
                 iconAnchor: [16, 32],
                 popupAnchor: [0, -32]
             });
-            blueIcon = createSVGIcon("#06b6d4"); // cyan-500
-            redIcon = createSVGIcon("#ef4444"); // red-500
+            blueIcon = createSVGIcon("#06b6d4");
+            redIcon = createSVGIcon("#ef4444");
 
             // --- UI LOGIC ---
             function showSection(section) {
@@ -483,7 +468,7 @@
             }
 
             function showError(message) {
-                errorText.textContent = message || "Could not generate the itinerary. Please check your inputs and try again.";
+                errorText.textContent = message || "Could not generate the itinerary. Please try again.";
                 errorMessage.classList.add('show');
                 showSection(planningSection);
                 generateBtn.disabled = false;
@@ -506,18 +491,21 @@
                 setTimeout(() => { modal.classList.add('hidden'); }, 300);
             }
             
+            // FIX: UPDATED AUTH UI FUNCTION FOR MOBILE RELIABILITY
             function updateAuthUI() {
                 const user = auth.getCurrentUser();
+                authContainerButtons.innerHTML = ''; // Clear the container
+
                 if (user) {
-                    authContainer.innerHTML = `
+                    authContainerButtons.innerHTML = `
                         <button id="headerMyTripsBtn" class="inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-cyan-600 transition-colors rounded-lg">
                             <i data-lucide="briefcase"></i>
                             <span class="hidden md:inline">My Trips</span>
                         </button>
                         <button id="headerProfileBtn" class="flex-shrink-0 p-2 rounded-full hover:bg-slate-100 transition-colors">
-                             <img src="${user.picture}" alt="Profile" class="h-8 w-8 rounded-full">
+                            <img src="${user.picture}" alt="Profile" class="h-8 w-8 rounded-full">
                         </button>
-                         <button id="logoutBtn" class="inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-cyan-600 transition-colors rounded-lg">
+                        <button id="logoutBtn" class="inline-flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-cyan-600 transition-colors rounded-lg">
                             <i data-lucide="log-out"></i>
                             <span class="hidden md:inline">Logout</span>
                         </button>
@@ -526,10 +514,10 @@
                     document.getElementById('headerProfileBtn').addEventListener('click', openProfileModal);
                     document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
                 } else {
-                    authContainer.innerHTML = `<div id="google-signin-btn"></div>`;
+                    // Render the button explicitly into our container.
                     google.accounts.id.renderButton(
-                        document.getElementById('google-signin-btn'),
-                        { theme: "outline", size: "large", text: "signin_with", shape: "pill" } 
+                        authContainerButtons,
+                        { theme: "outline", size: "large", text: "signin_with", shape: "pill" }  
                     );
                 }
                 lucide.createIcons();
@@ -571,22 +559,16 @@
                 if (!destination || !startDate || !endDate || !travelers || !budget) { throw new Error("Please fill out all the trip details before generating."); }
                 if (new Date(endDate) < new Date(startDate)) { throw new Error("End date cannot be before the start date."); }
                 
-                               const tripLength = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                const tripLength = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
                 const schema = { type: "OBJECT", properties: { "days": { type: "ARRAY", items: { type: "OBJECT", properties: { "day": { type: "NUMBER" }, "title": { type: "STRING" }, "events": { type: "ARRAY", items: { type: "OBJECT", properties: { "time": { type: "STRING" }, "title": { type: "STRING" }, "locationName": { type: "STRING" }, "description": { type: "STRING" }, "cost": { type: "NUMBER" }, "icon": { type: "STRING" }, "latitude": { type: "NUMBER" }, "longitude": { type: "NUMBER" } }, required: ["time", "title", "locationName", "description", "cost", "icon", "latitude", "longitude"] } } }, required: ["day", "title", "events"] } }, "hotelRecommendations": { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "style": { "type": "STRING" }, "estimatedPricePerNight": { "type": "NUMBER" }, "description": { "type": "STRING" }, "latitude": { "type": "NUMBER" }, "longitude": { "type": "NUMBER" } }, required: ["name", "style", "estimatedPricePerNight", "description", "latitude", "longitude"] } }, "restaurantRecommendations": { type: "ARRAY", items: { type: "OBJECT", properties: { "name": { "type": "STRING" }, "cuisine": { "type": "STRING" }, "estimatedPricePerPerson": { "type": "NUMBER" }, "description": { "type": "STRING" }, "latitude": { "type": "NUMBER" }, "longitude": { "type": "NUMBER" } }, required: ["name", "cuisine", "estimatedPricePerPerson", "description", "latitude", "longitude"] } }, "budgetBreakdown": { type: "OBJECT", properties: { "accommodation": { "type": "NUMBER" }, "food": { "type": "NUMBER" }, "activities": { "type": "NUMBER" }, "localTravel": { "type": "NUMBER" }, "miscellaneous": { "type": "NUMBER" } }, required: ["accommodation", "food", "activities", "localTravel", "miscellaneous"] } }, required: ["days", "hotelRecommendations", "restaurantRecommendations", "budgetBreakdown"] };
                 const validIcons = ["map-pin", "camera", "soup", "leaf", "shopping-cart", "trees", "beer", "gamepad-2", "heart", "gem", "bar-chart-2", "plane", "bus", "train", "utensils-crossed", "landmark", "mountain", "palace", "ticket", "log-in", "bed-double"];
-                const systemPrompt = `You are an expert Travel Planner. Your task is to create a budget-friendly and logically sequenced itinerary based on user inputs, adhering strictly to the JSON schema.
-Key Constraints:
-1.  **Strict Budget Adherence:** The sum of 'accommodation', 'food', 'activities', and 'localTravel' in the 'budgetBreakdown' MUST be less than or equal to the user's total budget. 'miscellaneous' is the remaining buffer. The sum of all five breakdown categories MUST precisely equal the total budget.
-2.  **Geographical Optimization:** For each day, the 'events' MUST be ordered in a geographically logical sequence to create a sensible route that minimizes travel time and cost.
-3.  **Realistic Planning:** Create a balanced plan that utilizes a significant portion of the budget for a good experience. Estimate a daily cost for local transport (metros, buses, etc.) and include the total in 'localTravel'.
-4.  **Complete Data:** For every event and recommendation, you MUST provide a specific location name and its precise, real-world latitude and longitude coordinates.
-5.  **Icon Selection:** For each daily event, choose the most appropriate icon from this list: ${validIcons.join(', ')}.`;
+                const systemPrompt = `You are an expert Travel Planner. Your task is to create a budget-friendly and logically sequenced itinerary based on user inputs, adhering strictly to the JSON schema. Key Constraints: 1.  **Strict Budget Adherence:** The sum of 'accommodation', 'food', 'activities', and 'localTravel' in the 'budgetBreakdown' MUST be less than or equal to the user's total budget. 'miscellaneous' is the remaining buffer. The sum of all five breakdown categories MUST precisely equal the total budget. 2.  **Geographical Optimization:** For each day, the 'events' MUST be ordered in a geographically logical sequence to create a sensible route that minimizes travel time and cost. 3.  **Realistic Planning:** Create a balanced plan that utilizes a significant portion of the budget for a good experience. Estimate a daily cost for local transport (metros, buses, etc.) and include the total in 'localTravel'. 4.  **Complete Data:** For every event and recommendation, you MUST provide a specific location name and its precise, real-world latitude and longitude coordinates. 5.  **Icon Selection:** For each daily event, choose the most appropriate icon from this list: ${validIcons.join(', ')}.`;
                 const userQuery = `Generate a ${tripLength}-day travel itinerary for a trip to ${destination}. \n- Travelers: ${travelers} \n- Total Budget: ₹${budget} INR \n- Start Date: ${new Date(startDate).toDateString()} \n- End Date: ${new Date(endDate).toDateString()}. \nFocus on famous, iconic, and must-visit locations suitable for a student traveler. Include cultural sites, landmarks, and fun activities. Provide 3 budget-friendly hotel/hostel recommendations and 4 diverse, affordable food recommendations.`;
                 return callGenerativeAPI(userQuery, systemPrompt, schema);
             }
             
             async function callGenerativeAPI(userQuery, systemPrompt, schema) {
-                const apiKey = "AIzaSyAnf0vVA1rgqxAsElm1ncAgXlXz1dUkdXU"; 
+                const apiKey = "AIzaSyAnf0vVA1rgqxAsElm1ncAgXlXz1dUkdXU";  
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: schema, }, };
                 let response; let retries = 3; let delay = 1000;
@@ -610,15 +592,12 @@ Key Constraints:
 
             function recalculateAndUpdateBudget() {
                 if (!currentItineraryData) return;
-
                 const totalBudget = parseFloat(currentItineraryData.details.budget);
                 let estimatedCost = 0;
-                
                 if (currentItineraryData.budgetBreakdown) {
                     const breakdown = currentItineraryData.budgetBreakdown;
                     estimatedCost = breakdown.accommodation + breakdown.food + breakdown.activities + breakdown.localTravel;
                 }
-
                 document.getElementById('estimated-cost').textContent = `₹${estimatedCost.toFixed(0)}`;
                 const budgetPercentage = totalBudget > 0 ? Math.min((estimatedCost / totalBudget) * 100, 100) : 0;
                 document.getElementById('budget-bar').style.width = `${budgetPercentage}%`;
@@ -640,7 +619,7 @@ Key Constraints:
                 document.getElementById('trip-location').textContent = `Your Trip to ${destination}`;
                 document.getElementById('trip-dates').textContent = `${formatDate(startDate)} - ${formatDate(endDate)}`;
                 document.getElementById('total-budget').textContent = `₹${parseFloat(details.budget).toFixed(0)}`;
-                travelCostResult.innerHTML = ''; // Reset travel cost on new render
+                travelCostResult.innerHTML = '';
 
                 recalculateAndUpdateBudget();
                 
@@ -654,91 +633,36 @@ Key Constraints:
 
                 const hotelCardsContainer = document.getElementById('hotel-cards');
                 const restaurantCardsContainer = document.getElementById('restaurant-cards');
-                hotelCardsContainer.innerHTML = ''; restaurantCardsContainer.innerHTML = '';
-                (itineraryData.hotelRecommendations || []).forEach(hotel => { 
-                    const card = document.createElement('div'); 
-                    card.className = "bg-white p-3 rounded-lg border border-slate-200"; 
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="font-bold text-slate-800 text-sm">${hotel.name}</p>
-                                <p class="text-xs text-slate-500">${hotel.style}</p>
-                            </div>
-                            <p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">₹${hotel.estimatedPricePerNight}/night</p>
-                        </div>
-                        <p class="mt-2 text-slate-600 text-xs">${hotel.description}</p>
-                        <div class="mt-2">
-                            <button data-lat="${hotel.latitude}" data-lon="${hotel.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
-                                Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
-                            </button>
-                        </div>
-                    `; 
-                    hotelCardsContainer.appendChild(card); 
+                hotelCardsContainer.innerHTML = '';
+                restaurantCardsContainer.innerHTML = '';
+
+                (itineraryData.hotelRecommendations || []).forEach(hotel => {  
+                    const card = document.createElement('div');  
+                    card.className = "bg-white p-3 rounded-lg border border-slate-200";  
+                    card.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold text-slate-800 text-sm">${hotel.name}</p><p class="text-xs text-slate-500">${hotel.style}</p></div><p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">₹${hotel.estimatedPricePerNight}/night</p></div><p class="mt-2 text-slate-600 text-xs">${hotel.description}</p><div class="mt-2"><button data-lat="${hotel.latitude}" data-lon="${hotel.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i></button></div>`;  
+                    hotelCardsContainer.appendChild(card);  
                 });
-                (itineraryData.restaurantRecommendations || []).forEach(resto => { 
-                    const card = document.createElement('div'); 
-                    card.className = "bg-white p-3 rounded-lg border border-slate-200"; 
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="font-bold text-slate-800 text-sm">${resto.name}</p>
-                                <p class="text-xs text-slate-500">${resto.cuisine}</p>
-                            </div>
-                            <p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">~₹${resto.estimatedPricePerPerson}/person</p>
-                        </div>
-                        <p class="mt-2 text-slate-600 text-xs">${resto.description}</p>
-                        <div class="mt-2">
-                            <button data-lat="${resto.latitude}" data-lon="${resto.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
-                                Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
-                            </button>
-                        </div>
-                    `; 
-                    restaurantCardsContainer.appendChild(card); 
+                (itineraryData.restaurantRecommendations || []).forEach(resto => {  
+                    const card = document.createElement('div');  
+                    card.className = "bg-white p-3 rounded-lg border border-slate-200";  
+                    card.innerHTML = `<div class="flex justify-between items-start"><div><p class="font-bold text-slate-800 text-sm">${resto.name}</p><p class="text-xs text-slate-500">${resto.cuisine}</p></div><p class="text-sm font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-md">~₹${resto.estimatedPricePerPerson}/person</p></div><p class="mt-2 text-slate-600 text-xs">${resto.description}</p><div class="mt-2"><button data-lat="${resto.latitude}" data-lon="${resto.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i></button></div>`;  
+                    restaurantCardsContainer.appendChild(card);  
                 });
                 
                 itineraryContentContainer.innerHTML = '';
-                itineraryData.days.forEach((day, dayIndex) => { 
-                    const dayContainer = document.createElement('div'); 
-                    dayContainer.className = "bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-200"; 
-                    let contentHTML = `<div class="flex justify-between items-center mb-4"><h4 class="text-xl font-bold text-slate-800">Day ${day.day}: ${day.title}</h4></div><div class="space-y-4 day-events-container" data-day-index="${dayIndex}">`; 
-                    (day.events || []).forEach((event, eventIndex) => { 
-                        contentHTML += `
-                        <div class="event-card flex items-start space-x-4 draggable" draggable="true" data-day-index="${dayIndex}" data-event-index="${eventIndex}">
-                            <div class="flex-shrink-0 mt-1 flex flex-col items-center">
-                                <i data-lucide="grip-vertical" class="h-5 w-5 text-slate-400"></i>
-                            </div>
-                            <div class="flex-shrink-0 flex flex-col items-center">
-                                <div class="flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-cyan-600">
-                                    <i data-lucide="${event.icon}" class="h-5 w-5"></i>
-                                </div>
-                            </div>
-                            <div class="bg-slate-50/50 p-4 rounded-lg border border-slate-200 w-full">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <p class="font-semibold text-slate-500 text-sm">${event.time}</p>
-                                        <p class="font-bold text-slate-800">${event.title}</p>
-                                        <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                                            <i data-lucide="map-pin" class="h-3 w-3"></i> ${event.locationName}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <p class="text-sm font-semibold text-slate-700 bg-slate-200 px-2 py-1 rounded-md">₹${event.cost || 0}</p>
-                                    </div>
-                                </div>
-                                <p class="mt-2 text-slate-600 text-sm">${event.description}</p>
-                                <div class="mt-2">
-                                    <button data-lat="${event.latitude}" data-lon="${event.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">
-                                        Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>`; 
-                    }); 
-                    contentHTML += `</div>`; 
-                    dayContainer.innerHTML = contentHTML; 
-                    itineraryContentContainer.appendChild(dayContainer); 
+                itineraryData.days.forEach((day, dayIndex) => {  
+                    const dayContainer = document.createElement('div');  
+                    dayContainer.className = "bg-white p-4 sm:p-6 rounded-xl shadow-md border border-slate-200";  
+                    let contentHTML = `<div class="flex justify-between items-center mb-4"><h4 class="text-xl font-bold text-slate-800">Day ${day.day}: ${day.title}</h4></div><div class="space-y-4 day-events-container" data-day-index="${dayIndex}">`;  
+                    (day.events || []).forEach((event, eventIndex) => {  
+                        contentHTML += `<div class="event-card flex items-start space-x-4 draggable" data-id="${dayIndex}-${eventIndex}"><div class="flex-shrink-0 mt-1 flex flex-col items-center cursor-grab"><i data-lucide="grip-vertical" class="h-5 w-5 text-slate-400"></i></div><div class="flex-shrink-0 flex flex-col items-center"><div class="flex items-center justify-center h-10 w-10 rounded-full bg-slate-100 text-cyan-600"><i data-lucide="${event.icon}" class="h-5 w-5"></i></div></div><div class="bg-slate-50/50 p-4 rounded-lg border border-slate-200 w-full"><div class="flex justify-between items-start"><div><p class="font-semibold text-slate-500 text-sm">${event.time}</p><p class="font-bold text-slate-800">${event.title}</p><p class="text-xs text-slate-500 flex items-center gap-1 mt-1"><i data-lucide="map-pin" class="h-3 w-3"></i> ${event.locationName}</p></div><div class="flex items-center gap-2"><p class="text-sm font-semibold text-slate-700 bg-slate-200 px-2 py-1 rounded-md">₹${event.cost || 0}</p></div></div><p class="mt-2 text-slate-600 text-sm">${event.description}</p><div class="mt-2"><button data-lat="${event.latitude}" data-lon="${event.longitude}" class="focus-map-btn text-xs font-semibold text-cyan-600 hover:text-cyan-700 inline-flex items-center gap-1">Show on Map <i data-lucide="map-pin" class="h-3 w-3"></i></button></div></div></div>`;  
+                    });  
+                    contentHTML += `</div>`;  
+                    dayContainer.innerHTML = contentHTML;  
+                    itineraryContentContainer.appendChild(dayContainer);  
                 });
                 setupMap(itineraryData);
+                initializeSortable();
                 lucide.createIcons();
             }
 
@@ -766,21 +690,19 @@ Key Constraints:
                 if (markerGroup.getLayers().length > 0) {
                     map.addLayer(markerGroup);
                     map.fitBounds(markerGroup.getBounds().pad(0.1));
-                } else { console.error("No valid locations could be plotted on the map."); document.getElementById('map').innerHTML = `<div class="h-full w-full flex items-center justify-center text-slate-500">Could not plot locations.</div>`; }
+                } else { document.getElementById('map').innerHTML = `<div class="h-full w-full flex items-center justify-center text-slate-500">Could not plot locations.</div>`; }
                 document.querySelectorAll('.focus-map-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const lat = e.currentTarget.dataset.lat;
                         const lon = e.currentTarget.dataset.lon;
                         Object.values(markers).forEach(m => m.setIcon(blueIcon));
-                        const key = `${lat},${lon}`;
-                        const targetMarker = markers[key];
+                        const targetMarker = markers[`${lat},${lon}`];
                         if (targetMarker) { targetMarker.setIcon(redIcon); }
                         if (map) { map.flyTo([lat, lon], 16, { duration: 1.2 }); }
                     });
                 });
             }
             
-            // --- Authentication Logic ---
             const auth = {
                 getUsers: () => JSON.parse(localStorage.getItem('wanderGenieUserData') || '{}'),
                 saveUsers: (users) => localStorage.setItem('wanderGenieUserData', JSON.stringify(users)),
@@ -794,33 +716,27 @@ Key Constraints:
                     sessionStorage.setItem('wanderGenieCurrentUser', JSON.stringify(user));
                 },
                 clearCurrentUser: () => sessionStorage.removeItem('wanderGenieCurrentUser'),
-
                 logout: () => {
                     auth.clearCurrentUser();
                     updateAuthUI();
                     showSection(heroSection);
                     showToast("You've been logged out.");
                 },
-
                 updateProfile: (newName) => {
                     const currentUser = auth.getCurrentUser();
                     if (!currentUser) return { success: false, message: "Not logged in." };
-
                     const users = auth.getUsers();
                     if (users[currentUser.email]) {
                         users[currentUser.email].name = newName;
                         auth.saveUsers(users);
-                        
                         const updatedUser = { ...currentUser, name: newName };
                         auth.setCurrentUser(updatedUser);
-                        
                         return { success: true };
                     }
                     return { success: false, message: "Could not find user to update."};
                 }
             };
             
-            // --- User Data Logic (Trips) ---
             const userData = {
                  getTrips: () => {
                     const currentUser = auth.getCurrentUser();
@@ -875,18 +791,7 @@ Key Constraints:
                         const destination = trip.details.destination;
                         const startDate = new Date(trip.details.startDate);
                         const formatDate = (date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date);
-                        item.innerHTML = `
-                            <div>
-                                <p class="font-bold text-slate-800">${destination}</p>
-                                <p class="text-sm text-slate-500">${formatDate(startDate)}</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button data-trip-id="${trip.id}" class="load-trip-btn bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-1.5 px-3 rounded-md text-sm">Load</button>
-                                <button data-trip-id="${trip.id}" class="delete-trip-btn p-2 rounded-md hover:bg-red-100 text-red-500">
-                                    <i data-lucide="trash-2" class="h-4 w-4"></i>
-                                </button>
-                            </div>
-                        `;
+                        item.innerHTML = `<div><p class="font-bold text-slate-800">${destination}</p><p class="text-sm text-slate-500">${formatDate(startDate)}</p></div><div class="flex items-center gap-2"><button data-trip-id="${trip.id}" class="load-trip-btn bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-1.5 px-3 rounded-md text-sm">Load</button><button data-trip-id="${trip.id}" class="delete-trip-btn p-2 rounded-md hover:bg-red-100 text-red-500"><i data-lucide="trash-2" class="h-4 w-4"></i></button></div>`;
                         list.appendChild(item);
                     });
                     myTripsList.appendChild(list);
@@ -900,8 +805,7 @@ Key Constraints:
                 const deleteBtn = e.target.closest('.delete-trip-btn');
                 if (loadBtn) {
                     const tripId = Number(loadBtn.dataset.tripId);
-                    const trips = userData.getTrips();
-                    const tripToLoad = trips.find(t => t.id === tripId);
+                    const tripToLoad = userData.getTrips().find(t => t.id === tripId);
                     if (tripToLoad) {
                         renderItinerary(tripToLoad, tripToLoad.details);
                         showSection(itinerarySection);
@@ -910,51 +814,39 @@ Key Constraints:
                     }
                 }
                 if (deleteBtn) {
-                    const tripId = Number(deleteBtn.dataset.tripId);
-                    let trips = userData.getTrips();
-                    trips = trips.filter(t => t.id !== tripId);
+                    let trips = userData.getTrips().filter(t => t.id !== Number(deleteBtn.dataset.tripId));
                     userData.saveTrips(trips);
-                    loadAndShowTrips(); // Refresh the list
+                    loadAndShowTrips();
                 }
             }
             
             function openProfileModal() {
                 const user = auth.getCurrentUser();
                 if (!user) return;
-                
                 document.getElementById('profileImageView').src = user.picture;
                 document.getElementById('profileNameView').textContent = user.name;
                 document.getElementById('profileEmailView').textContent = user.email;
                 document.getElementById('profileNameEdit').value = user.name;
-
                 profileView.classList.remove('hidden');
                 profileEdit.classList.add('hidden');
-
                 showModal(profileModal);
             }
             
             function decodeJwtResponse(token) {
                 var base64Url = token.split('.')[1];
                 var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+                var jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
                 return JSON.parse(jsonPayload);
             }
 
             window.handleGoogleSignIn = (response) => {
                 const responsePayload = decodeJwtResponse(response.credential);
-                const user = {
-                    email: responsePayload.email,
-                    name: responsePayload.name,
-                    picture: responsePayload.picture,
-                };
+                const user = { email: responsePayload.email, name: responsePayload.name, picture: responsePayload.picture };
                 auth.setCurrentUser(user);
                 updateAuthUI();
                 showToast(`Welcome, ${user.name}!`);
             };
 
-            // --- IMPROVED TRAVEL COST ESTIMATION ---
             function openTravelCostModal() {
                 showModal(travelCostModal);
                 document.getElementById('travelFrom').focus();
@@ -963,82 +855,36 @@ Key Constraints:
             function handleTravelCostEstimation(e) {
                 e.preventDefault();
                 const travelFrom = document.getElementById('travelFrom').value.trim();
-                
-                if (!travelFrom) {
-                    showToast("Please enter your starting location.");
-                    return;
-                }
-
-                if (!currentItineraryData || !currentItineraryData.days[0].events[0]) {
-                    showToast("Destination location not available.");
-                    return;
-                }
-
-                // Show loading state
+                if (!travelFrom) { showToast("Please enter your starting location."); return; }
+                if (!currentItineraryData?.days[0]?.events[0]) { showToast("Destination location not available."); return; }
                 const submitBtn = travelCostForm.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mx-auto"></div>';
                 submitBtn.disabled = true;
-
-                // In a real implementation, you would call an API to get coordinates for the starting location
-                // For this demo, we'll simulate the process
                 setTimeout(() => {
-                    const destLat = currentItineraryData.days[0].events[0].latitude;
-                    const destLon = currentItineraryData.days[0].events[0].longitude;
-                    
-                    // Simulate getting coordinates for starting location
-                    // In reality, you would use a geocoding service here
-                    const startLat = destLat + (Math.random() * 10 - 5); // Random location near destination for demo
+                    const { latitude: destLat, longitude: destLon } = currentItineraryData.days[0].events[0];
+                    const startLat = destLat + (Math.random() * 10 - 5);
                     const startLon = destLon + (Math.random() * 10 - 5);
-                    
                     const distance = getHaversineDistance(startLat, startLon, destLat, destLon);
-                    
-                    // More realistic cost estimation based on distance and travel mode
-                    const flightCost = Math.max(2000, distance * 8); // Base flight cost
-                    const trainCost = Math.max(500, distance * 2); // Base train cost
-                    const busCost = Math.max(300, distance * 1.5); // Base bus cost
-                    
-                    travelCostResult.innerHTML = `
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <h4 class="font-bold text-slate-800 mb-2">Travel Cost from ${travelFrom}</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span>Flight (round trip):</span>
-                                    <span class="font-semibold">₹${flightCost.toFixed(0)}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Train (round trip):</span>
-                                    <span class="font-semibold">₹${trainCost.toFixed(0)}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Bus (round trip):</span>
-                                    <span class="font-semibold">₹${busCost.toFixed(0)}</span>
-                                </div>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-3">Based on approximate distance of ${distance.toFixed(0)} km. Prices are estimates for planning purposes.</p>
-                        </div>
-                    `;
-                    
-                    // Reset button
+                    const flightCost = Math.max(2000, distance * 8);
+                    const trainCost = Math.max(500, distance * 2);
+                    const busCost = Math.max(300, distance * 1.5);
+                    travelCostResult.innerHTML = `<div class="bg-slate-50 p-4 rounded-lg border border-slate-200"><h4 class="font-bold text-slate-800 mb-2">Travel Cost from ${travelFrom}</h4><div class="space-y-2 text-sm"><div class="flex justify-between"><span>Flight (round trip):</span><span class="font-semibold">₹${flightCost.toFixed(0)}</span></div><div class="flex justify-between"><span>Train (round trip):</span><span class="font-semibold">₹${trainCost.toFixed(0)}</span></div><div class="flex justify-between"><span>Bus (round trip):</span><span class="font-semibold">₹${busCost.toFixed(0)}</span></div></div><p class="text-xs text-slate-500 mt-3">Based on approximate distance of ${distance.toFixed(0)} km. Prices are estimates for planning purposes.</p></div>`;
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
-                    
                     closeModal(travelCostModal);
                 }, 1500);
             }
 
             function getHaversineDistance(lat1, lon1, lat2, lon2) {
-                const R = 6371; // Radius of the Earth in km
+                const R = 6371;
                 const dLat = (lat2 - lat1) * Math.PI / 180;
                 const dLon = (lon2 - lon1) * Math.PI / 180;
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                 return R * c;
             }
 
-            // --- EVENT LISTENERS ---
             startPlanningBtn.addEventListener('click', () => {
                 if (auth.getCurrentUser()) {
                     showSection(planningSection);
@@ -1050,131 +896,69 @@ Key Constraints:
             generateBtn.addEventListener('click', startGeneration);
             startOverBtn.addEventListener('click', () => { if (map) { map.remove(); map = null; }; showSection(heroSection); });
             saveTripBtn.addEventListener('click', saveCurrentTrip);
-            
-            // Updated travel cost estimation
             estimateTravelCostBtn.addEventListener('click', openTravelCostModal);
             travelCostForm.addEventListener('submit', handleTravelCostEstimation);
             cancelTravelCostBtn.addEventListener('click', () => closeModal(travelCostModal));
             
-            // --- DRAG AND DROP LOGIC ---
+            // --- FIX: SORTABLEJS IMPLEMENTATION FOR DRAG-AND-DROP ---
             function regenerateTimesForDay(events) {
                 const timeSlots = ["09:00 AM", "10:30 AM", "12:00 PM", "01:30 PM", "03:00 PM", "04:30 PM", "06:00 PM", "07:30 PM", "09:00 PM", "10:00 PM"];
                 events.forEach((event, index) => {
-                    if (index < timeSlots.length) {
-                        event.time = timeSlots[index];
-                    }
+                    if (index < timeSlots.length) event.time = timeSlots[index];
                 });
             }
 
-            itineraryContentContainer.addEventListener('dragstart', (e) => {
-                draggedItem = e.target.closest('.event-card');
-                if (draggedItem) {
-                    setTimeout(() => { draggedItem.classList.add('dragging'); }, 0);
-                }
-            });
-
-            itineraryContentContainer.addEventListener('dragend', (e) => {
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                    draggedItem = null;
-                    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-                }
-            });
-
-            itineraryContentContainer.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const container = e.target.closest('.day-events-container');
-                if (!container || !draggedItem) return;
-
-                const afterElement = getDragAfterElement(container, e.clientY);
-                [...container.querySelectorAll('.draggable')].forEach(el => el.classList.remove('drag-over'));
-                
-                if (afterElement == null) {
-                    // No specific style needed for dropping at the end
-                } else {
-                    afterElement.classList.add('drag-over');
-                }
-            });
-
-            itineraryContentContainer.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const container = e.target.closest('.day-events-container');
-                 if (container && draggedItem) {
-                    const fromDayIndex = parseInt(draggedItem.dataset.dayIndex);
-                    const toDayIndex = parseInt(container.dataset.dayIndex);
-
-                    if (fromDayIndex !== toDayIndex) {
-                        showToast("You can only reorder events within the same day.");
-                        return;
-                    }
+            function initializeSortable() {
+                document.querySelectorAll('.day-events-container').forEach(container => {
+                    if (container.sortable) container.sortable.destroy();
                     
-                    const afterElement = getDragAfterElement(container, e.clientY);
-                    const fromIndex = parseInt(draggedItem.dataset.eventIndex);
-                    
-                    const eventToMove = currentItineraryData.days[fromDayIndex].events.splice(fromIndex, 1)[0];
-                    
-                    if (afterElement == null) {
-                        currentItineraryData.days[toDayIndex].events.push(eventToMove);
-                    } else {
-                        const toIndex = parseInt(afterElement.dataset.eventIndex);
-                        const originalToIndexInData = currentItineraryData.days[toDayIndex].events.findIndex(
-                            evt => JSON.stringify(evt) === JSON.stringify(currentItineraryData.days[afterElement.dataset.dayIndex].events[toIndex])
-                        );
-                        currentItineraryData.days[toDayIndex].events.splice(originalToIndexInData, 0, eventToMove);
-                    }
-                    
-                    // Regenerate times for the modified day
-                    regenerateTimesForDay(currentItineraryData.days[toDayIndex].events);
-
-                    renderItinerary(currentItineraryData, currentItineraryData.details);
-                    showToast("Itinerary order and times updated!");
-                 }
-            });
-
-            function getDragAfterElement(container, y) {
-                const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
-                return draggableElements.reduce((closest, child) => {
-                    const box = child.getBoundingClientRect();
-                    const offset = y - box.top - box.height / 2;
-                    if (offset < 0 && offset > closest.offset) {
-                        return { offset: offset, element: child };
-                    } else {
-                        return closest;
-                    }
-                }, { offset: Number.NEGATIVE_INFINITY }).element;
+                    container.sortable = new Sortable(container, {
+                        animation: 150,
+                        draggable: '.draggable',
+                        handle: '.draggable', // Makes the whole card draggable
+                        onEnd: (evt) => {
+                            const { oldIndex, newIndex } = evt;
+                            const dayIndex = parseInt(container.dataset.dayIndex);
+                            const dayEvents = currentItineraryData.days[dayIndex].events;
+                            
+                            // Re-order the data array to match the DOM
+                            const [movedItem] = dayEvents.splice(oldIndex, 1);
+                            dayEvents.splice(newIndex, 0, movedItem);
+                            
+                            // Update times and re-render to ensure data and UI are in sync
+                            regenerateTimesForDay(dayEvents);
+                            renderItinerary(currentItineraryData, currentItineraryData.details);
+                            showToast("Itinerary order updated!");
+                        },
+                    });
+                });
             }
 
-            // Modals
             modalsContainer.addEventListener('click', (e) => {
-                if(e.target.closest('.close-modal-btn')) {
-                    const modal = e.target.closest('.modal-backdrop');
-                    if (modal) closeModal(modal);
-                }
-                if(e.target.matches('.modal-backdrop')) {
-                    closeModal(e.target);
+                const modal = e.target.closest('.modal-backdrop');
+                if (e.target.closest('.close-modal-btn') || e.target === modal) {
+                    closeModal(modal);
                 }
             });
             myTripsList.addEventListener('click', handleMyTripsListClick);
 
-            // Profile Modal Logic
             editProfileBtn.addEventListener('click', () => {
                 profileView.classList.add('hidden');
                 profileEdit.classList.remove('hidden');
             });
-
             cancelEditProfileBtn.addEventListener('click', () => {
                 profileView.classList.remove('hidden');
                 profileEdit.classList.add('hidden');
             });
-            
             profileEditForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const newName = document.getElementById('profileNameEdit').value.trim();
-                if(newName) {
+                if (newName) {
                     const result = auth.updateProfile(newName);
                     if (result.success) {
                         showToast("Profile updated successfully!");
                         closeModal(profileModal);
+                        updateAuthUI(); // Refresh UI to show new name if needed
                     } else {
                         showToast(result.message);
                     }
@@ -1183,32 +967,16 @@ Key Constraints:
             
             // --- INITIALIZATION ---
             window.onload = function () {
-                const clientId = document.querySelector('meta[name="google-signin-client_id"]').content;
-                google.accounts.id.initialize({
-                    client_id: clientId,
-                    callback: handleGoogleSignIn
-                });
                 lucide.createIcons();
                 updateAuthUI();
                 
-                // Set min dates for date pickers but no default values
-                const today = new Date();
-                const todayStr = today.toISOString().split('T')[0];
+                const todayStr = new Date().toISOString().split('T')[0];
                 const startDateInput = document.getElementById('startDate');
                 const endDateInput = document.getElementById('endDate');
-
                 startDateInput.setAttribute('min', todayStr);
-
                 startDateInput.addEventListener('change', (e) => {
-                    if (e.target.value) {
-                        const nextDay = new Date(e.target.value);
-                                                nextDay.setDate(nextDay.getDate() + 1);
-                        const nextDayStr = nextDay.toISOString().split('T')[0];
-                        endDateInput.value = ''; // Clear end date if start date changes
-                        endDateInput.setAttribute('min', nextDayStr);
-                    } else {
-                        endDateInput.removeAttribute('min');
-                    }
+                    endDateInput.value = '';
+                    endDateInput.setAttribute('min', e.target.value);
                 });
             }
         }
